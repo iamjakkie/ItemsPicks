@@ -22,6 +22,16 @@ f <- function(x){
     coeffs[5]*x[4] + coeffs[6]*x[5] + coeffs[7]*x[6] +
     coeffs[8]*x[7]
 }
+
+# floor (0,3)
+# side (1,2)
+# lr_alley (1,2) <- wywalic niejednolite
+# turns (0,Inf)
+# distance (0, Inf)
+# suma pickow (0, Inf)
+# sup_loc - liczba lokacji, sup_to_pick - liczba pobranych itemow 
+# sex - 0 kobieta
+
 res <- optim(rep(5,7),f, method="L-BFGS-B", lower=rep(0,7), upper=rep(10,7))
 
 
@@ -31,3 +41,22 @@ res <- optimize(f, lower = 0, upper = 5, maximum = FALSE)
 hist(picks$SECONDS_PER_PICK)
 
 car::vif(model)
+
+
+test_model = lm(formula = log(SECONDS_PER_PICK) ~ FLOOR + SIDE + LR_ALLEY + 
+                  TURNS + DISTANCE + RET_LOC + SUP_LOC + FLOOR:SIDE + FLOOR:LR_ALLEY + 
+                  FLOOR:TURNS + FLOOR:DISTANCE + FLOOR:RET_LOC + FLOOR:SUP_LOC + 
+                  SIDE:LR_ALLEY + SIDE:TURNS + SIDE:DISTANCE + SIDE:RET_LOC + 
+                  LR_ALLEY:TURNS + LR_ALLEY:DISTANCE + LR_ALLEY:RET_LOC + LR_ALLEY:SUP_LOC + 
+                  TURNS:DISTANCE + TURNS:RET_LOC + TURNS:SUP_LOC + DISTANCE:RET_LOC + 
+                  DISTANCE:SUP_LOC + RET_LOC:SUP_LOC, data = clean_picks)
+summary(test_model)
+
+car::vif(test_model)
+test_model %>% step()
+
+
+clean_picks %>% gather() %>% head()
+ggplot(gather(clean_picks), aes(log(value))) + 
+  geom_histogram(bins = 10) + 
+  facet_wrap(~key, scales = 'free_x')
