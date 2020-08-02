@@ -1,5 +1,5 @@
 library("tidyverse")
-
+library("ggthemr")
 picks <- read.csv('Data/picks.csv')
 
 glimpse(picks)
@@ -32,6 +32,75 @@ clean_picks %>% group_by(FLOOR) %>%
   labs(x = "FLOOR", y = "SECONDS_PER_PICK",
        title = "AVG SECONDS_PER_PICK PER FLOOR",
        subtitle = "Getting items from 3rd floor takes longer")
+
+# 3. SIDE - categorical [0,1]
+unique(clean_picks$SIDE)
+clean_picks$SIDE <- as_factor(round(clean_picks$SIDE))
+unique(clean_picks$SIDE)
+
+ggplot(clean_picks, aes(SIDE)) +
+  geom_bar()
+
+clean_picks %>% group_by(SIDE) %>%
+  summarise(avg_picks = mean(SECONDS_PER_PICK)) %>%
+  ggplot(aes(SIDE, avg_picks)) +
+  geom_bar(stat='identity') +
+  geom_text(aes(label=avg_picks), position=position_dodge(width=0.9), vjust=-0.25)
+
+# 4. LR_ALLEY - categorical [0,1]
+unique(clean_picks$LR_ALLEY)
+
+clean_picks %>% group_by(LR_ALLEY) %>%
+  summarise(count = n()) %>%
+  arrange(-count) %>%
+  head()
+
+clean_picks %>% filter(LR_ALLEY != 1 & LR_ALLEY != 2) %>%
+  count()
+
+clean_picks <- clean_picks %>% filter(LR_ALLEY ==1 | LR_ALLEY ==2)
+#deleted 6988 rows
+
+clean_picks$LR_ALLEY <- as_factor(clean_picks$LR_ALLEY)
+unique(clean_picks$LR_ALLEY)
+
+# 5. TURNS - I'd assume this is a categorical variable
+
+unique(clean_picks$TURNS)
+
+clean_picks$TURNS <- as_factor(clean_picks$TURNS)
+
+
+# 6. Distance - continuous
+
+summary(clean_picks$DISTANCE)
+
+ggplot(clean_picks, aes(DISTANCE, SECONDS_PER_PICK)) +
+  geom_point()
+
+clean_picks %>% filter(DISTANCE > 400000) %>%
+  ggplot(aes(DISTANCE, SECONDS_PER_PICK)) +
+  geom_point()
+
+# get rid of outliers (5)
+
+nrow(clean_picks)
+clean_picks <- clean_picks %>% filter(DISTANCE <= 400000)
+nrow(clean_picks)
+
+
+# 7. RET_LOC
+
+summary(clean_picks$RET_LOC)
+
+ggplot(clean_picks, aes(RET_LOC, SECONDS_PER_PICK)) + 
+  geom_point()
+
+# 8. SUP_LOC
+
+summary(clean_picks$SUP_LOC)
+
+ggplot(clean_picks, aes(SUP_LOC))
 
 model <- lm(log(SECONDS_PER_PICK) ~ ., clean_picks)
 
