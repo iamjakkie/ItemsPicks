@@ -6,6 +6,33 @@ glimpse(picks)
 
 clean_picks <- select(picks, -RET_TO_PICK, -SUP_TO_PICK, -DURATION)
 
+# data cleanup
+# 1. Distance - greater than 0
+
+clean_picks[clean_picks$DISTANCE<=0]
+
+ggplot(clean_picks, aes(DISTANCE, SECONDS_PER_PICK)) +
+  geom_point()
+
+# two weird outliers
+clean_picks <- clean_picks %>% filter(SECONDS_PER_PICK <= 1000)
+
+# 2. Floor - categorical variable [0,3]
+unique(round(clean_picks$FLOOR))
+clean_picks$FLOOR <- as_factor(round(clean_picks$FLOOR))
+unique(clean_picks$FLOOR)
+
+ggplot(clean_picks, aes(FLOOR, fill = SECONDS_PER_PICK)) +
+  geom_bar()
+
+clean_picks %>% group_by(FLOOR) %>%
+  summarise(avg_picks = mean(SECONDS_PER_PICK)) %>%
+  ggplot(aes(x = reorder(FLOOR, -avg_picks), avg_picks)) +
+  geom_bar(stat='identity') +
+  labs(x = "FLOOR", y = "SECONDS_PER_PICK",
+       title = "AVG SECONDS_PER_PICK PER FLOOR",
+       subtitle = "Getting items from 3rd floor takes longer")
+
 model <- lm(log(SECONDS_PER_PICK) ~ ., clean_picks)
 
 view(picks)
