@@ -104,22 +104,71 @@ ggplot(clean_picks, aes(SUP_LOC, SECONDS_PER_PICK)) +
   geom_point()
 
 
+## STATISTICAL PART
+
+# 1. Distribution of continuous values
+
+## a. Distance
+hist(clean_picks$DISTANCE)
+hist(log(clean_picks$DISTANCE)) #better
+clean_picks$DISTANCE <- log(clean_picks$DISTANCE)
+## b. RET_LOC
+hist(clean_picks$RET_LOC)
+hist(log(clean_picks$RET_LOC))
+## c. SUP_LOC
+hist(clean_picks$SUP_LOC)
+hist(log(clean_picks$SUP_LOC))
+## d. SECONDS_PER_PICK
+hist(clean_picks$SECONDS_PER_PICK)
+hist(log(clean_picks$SECONDS_PER_PICK)) #better
+
+clean_picks <- clean_picks %>% filter(DISTANCE != -Inf)
+# model
+test_model = lm(formula = log(SECONDS_PER_PICK) ~ FLOOR + SIDE + LR_ALLEY + 
+                  TURNS + DISTANCE + RET_LOC + SUP_LOC + FLOOR:SIDE + FLOOR:LR_ALLEY + 
+                  FLOOR:TURNS + FLOOR:DISTANCE + FLOOR:RET_LOC + FLOOR:SUP_LOC + 
+                  SIDE:LR_ALLEY + SIDE:TURNS + SIDE:DISTANCE + SIDE:RET_LOC + 
+                  LR_ALLEY:TURNS + LR_ALLEY:DISTANCE + LR_ALLEY:RET_LOC + LR_ALLEY:SUP_LOC + 
+                  TURNS:DISTANCE + TURNS:RET_LOC + TURNS:SUP_LOC + DISTANCE:RET_LOC + 
+                  DISTANCE:SUP_LOC + RET_LOC:SUP_LOC, data = clean_picks)
+summary(test_model)
+
+
+# search for better 
+test_model %>% step()
+
+proposed <- lm(formula = log(SECONDS_PER_PICK) ~ FLOOR + SIDE + LR_ALLEY + 
+                 TURNS + DISTANCE + RET_LOC + SUP_LOC + FLOOR:SIDE + FLOOR:LR_ALLEY + 
+                 FLOOR:DISTANCE + FLOOR:RET_LOC + FLOOR:SUP_LOC + SIDE:LR_ALLEY + 
+                 SIDE:RET_LOC + LR_ALLEY:DISTANCE + LR_ALLEY:RET_LOC + LR_ALLEY:SUP_LOC + 
+                 TURNS:DISTANCE + TURNS:RET_LOC + TURNS:SUP_LOC + DISTANCE:RET_LOC + 
+                 DISTANCE:SUP_LOC + RET_LOC:SUP_LOC, data = clean_picks)
+
+summary(proposed)
+
+
 model <- lm(log(SECONDS_PER_PICK) ~ ., clean_picks)
 
-view(picks)
-model
-summary(model)
-coeffs = coef(model)
-# f <- function(floor, side, alley, turns, distance, ret_loc, sup_loc){
-#   coeffs[1] + coeffs[2]*floor + coeffs[3]*side + coeffs[4]*alley +
-#     coeffs[5]*turns + coeffs[6]*distance + coeffs[7]*ret_loc +
-#     coeffs[8]*sup_loc
-# }
+
+# Function
+coeffs = coef(proposed)
 f <- function(x){
   coeffs[1] + coeffs[2]*x[1] + coeffs[3]*x[2] + coeffs[4]*x[3] +
     coeffs[5]*x[4] + coeffs[6]*x[5] + coeffs[7]*x[6] +
     coeffs[8]*x[7]
 }
+
+
+view(picks)
+model
+summary(model)
+
+# f <- function(floor, side, alley, turns, distance, ret_loc, sup_loc){
+#   coeffs[1] + coeffs[2]*floor + coeffs[3]*side + coeffs[4]*alley +
+#     coeffs[5]*turns + coeffs[6]*distance + coeffs[7]*ret_loc +
+#     coeffs[8]*sup_loc
+# }
+
 
 # floor (0,3)
 # side (1,2)
@@ -138,20 +187,13 @@ res <- optimize(f, lower = 0, upper = 5, maximum = FALSE)
 
 hist(picks$SECONDS_PER_PICK)
 
-car::vif(model)
 
 
-test_model = lm(formula = log(SECONDS_PER_PICK) ~ FLOOR + SIDE + LR_ALLEY + 
-                  TURNS + DISTANCE + RET_LOC + SUP_LOC + FLOOR:SIDE + FLOOR:LR_ALLEY + 
-                  FLOOR:TURNS + FLOOR:DISTANCE + FLOOR:RET_LOC + FLOOR:SUP_LOC + 
-                  SIDE:LR_ALLEY + SIDE:TURNS + SIDE:DISTANCE + SIDE:RET_LOC + 
-                  LR_ALLEY:TURNS + LR_ALLEY:DISTANCE + LR_ALLEY:RET_LOC + LR_ALLEY:SUP_LOC + 
-                  TURNS:DISTANCE + TURNS:RET_LOC + TURNS:SUP_LOC + DISTANCE:RET_LOC + 
-                  DISTANCE:SUP_LOC + RET_LOC:SUP_LOC, data = clean_picks)
-summary(test_model)
+
+
 
 car::vif(test_model)
-test_model %>% step()
+
 
 
 clean_picks %>% gather() %>% head()
