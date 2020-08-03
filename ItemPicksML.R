@@ -100,7 +100,9 @@ ggplot(clean_picks, aes(RET_LOC, SECONDS_PER_PICK)) +
 
 summary(clean_picks$SUP_LOC)
 
-ggplot(clean_picks, aes(SUP_LOC))
+ggplot(clean_picks, aes(SUP_LOC, SECONDS_PER_PICK)) +
+  geom_point()
+
 
 model <- lm(log(SECONDS_PER_PICK) ~ ., clean_picks)
 
