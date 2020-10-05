@@ -1,5 +1,6 @@
 library("tidyverse")
 library("ggthemr")
+library("caret")
 picks <- read.csv('Data/picks.csv')
 
 glimpse(picks)
@@ -65,7 +66,7 @@ clean_picks$LR_ALLEY <- as_factor(clean_picks$LR_ALLEY)
 unique(clean_picks$LR_ALLEY)
 
 # 5. TURNS - I'd assume this is a categorical variable
-
+# wrocic do ilosciowej
 unique(clean_picks$TURNS)
 
 clean_picks$TURNS <- as_factor(clean_picks$TURNS)
@@ -139,13 +140,22 @@ test_model %>% step()
 
 proposed <- lm(formula = log(SECONDS_PER_PICK) ~ FLOOR + SIDE + LR_ALLEY + 
                  TURNS + DISTANCE + RET_LOC + SUP_LOC + FLOOR:SIDE + FLOOR:LR_ALLEY + 
-                 FLOOR:DISTANCE + FLOOR:RET_LOC + FLOOR:SUP_LOC + SIDE:LR_ALLEY + 
-                 SIDE:RET_LOC + LR_ALLEY:DISTANCE + LR_ALLEY:RET_LOC + LR_ALLEY:SUP_LOC + 
-                 TURNS:DISTANCE + TURNS:RET_LOC + TURNS:SUP_LOC + DISTANCE:RET_LOC + 
-                 DISTANCE:SUP_LOC + RET_LOC:SUP_LOC, data = clean_picks)
+                 FLOOR:TURNS + FLOOR:DISTANCE + FLOOR:RET_LOC + FLOOR:SUP_LOC + 
+                 SIDE:LR_ALLEY + SIDE:TURNS + SIDE:RET_LOC + LR_ALLEY:DISTANCE + 
+                 LR_ALLEY:RET_LOC + LR_ALLEY:SUP_LOC + TURNS:DISTANCE + TURNS:RET_LOC + 
+                 TURNS:SUP_LOC + DISTANCE:RET_LOC + DISTANCE:SUP_LOC, data = clean_picks)
 
 summary(proposed)
 
+no_sup_loc <- lm(formula = log(SECONDS_PER_PICK) ~ FLOOR + SIDE + LR_ALLEY + 
+                   TURNS + DISTANCE + RET_LOC + FLOOR:SIDE + FLOOR:TURNS + FLOOR:DISTANCE + 
+                   FLOOR:RET_LOC + SIDE:TURNS + SIDE:RET_LOC + LR_ALLEY:DISTANCE + 
+                   LR_ALLEY:RET_LOC + TURNS:DISTANCE + TURNS:RET_LOC + DISTANCE:RET_LOC, 
+                 data = clean_picks)
+
+summary(no_sup_loc)
+
+no_sup_loc %>% step()
 
 model <- lm(log(SECONDS_PER_PICK) ~ ., clean_picks)
 
